@@ -6,6 +6,7 @@ import random
 import uuid
 from model import clip_damage_descriptions
 import hashlib
+import math
 
 # Замена uuid.uuid4().hex на хэш содержимого файла
 def generate_filename_hash(file_content):
@@ -24,21 +25,60 @@ ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg'}
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+# def analyze_images(file_paths):
+#     """Анализ изображений с помощью модели clip_damage_descriptions"""
+#     combined_results = {}
+
+#     for file_path in file_paths:
+#         results, _ = clip_damage_descriptions(file_path)
+#         i = 0
+#         for desc, prob in results:
+#             i += 1
+#             # Суммируем вероятности по всем изображениям
+#             print(results)
+#             combined_results[desc] =combined_results.get(desc, 0) + prob
+
+#     combined_results = {k: float(v) for k, v in combined_results.items()}
+#     return combined_results
 def analyze_images(file_paths):
-    """Анализ изображений с помощью модели clip_damage_descriptions"""
+    """Анализ изображений с усреднением вероятностей по изображениям, если на них есть машина."""
+    combined_results = {}
+    count_images = 0
     combined_results = {}
 
     for file_path in file_paths:
-        results, _ = clip_damage_descriptions(file_path)
+        results, check = clip_damage_descriptions(file_path)
         i = 0
+        if not check["is_car"]:
+            continue
+        count_images += 1
         for desc, prob in results:
             i += 1
             # Суммируем вероятности по всем изображениям
             print(results)
-            combined_results[desc] =combined_results.get(desc, 0) + prob
+            combined_results[desc] = combined_results.get(desc, 0) + prob
 
     combined_results = {k: float(v) for k, v in combined_results.items()}
-    return combined_results
+    print(combined_results)
+
+    if count_images == 0:
+        # Если ни одно изображение не содержит машину — возвращаем нули
+        return {desc: 0.0 for desc in get_all_possible_descriptions()}
+    
+    # Усреднение вероятностей по изображениям
+    averaged_results = {desc: probs / count_images for desc, probs in combined_results.items()}
+    
+    return averaged_results
+
+def get_all_possible_descriptions():
+    return [
+        "Car with total loss: heavily damaged car, not drivable, only for parts",
+        "Car with severely damaged: car not drivable, heavily damaged but repairable",
+        "Car with moderate damage: car drivable, has damage, requires parts repair",
+        "Car with minor damage: car with dents and scratches, minor damage",
+        "Car with cosmetic defects: car with small cosmetic defects and scratches, no major damage",
+    ]
+
 
 
 
