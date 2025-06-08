@@ -1,0 +1,12 @@
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "8082:8082" # Маппинг портов: локальный порт 5000 -> порт 5000 в контейнере
+    volumes:
+      - ./src:/app/src # Монтируем директорию src для разработки
+      - ./static:/app/static # Монтируем директорию static
+    environment:
+      - FLASK_ENV=development # Настройка Flask окружения

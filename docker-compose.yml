@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./yjhv-guys-Avito
+    container_name: yjhv-guys-Avito
+    ports:
+      - "8082:8082"
+    volumes:
+      - ./yjhv-guys-Avito/src:/app/src
+      - ./yjhv-guys-Avito/static:/app/static
+    environment:
+      - FLASK_ENV=development
+
+  frontend:
+    build:
+      context: ./yjhv-guys-frontend
+    container_name: yjhv-guys-frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./yjhv-guys-frontend:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    command: npm run dev -- --host 0.0.0.0
+
+networks:
+  default:
+    driver: bridge
